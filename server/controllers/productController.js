@@ -9,7 +9,7 @@ const getProducts = asyncHandler(async (req, res) => {
   const inventories = await Inventory.find({});
 
   const productsWithStock = products.map(product => {
-    const baseInv = inventories.filter(i => 
+    const baseInv = inventories.filter(i =>
       i.product.toString() === product._id.toString() && !i.variantSku
     );
     return {
@@ -26,6 +26,7 @@ const getProducts = asyncHandler(async (req, res) => {
 const createProduct = asyncHandler(async (req, res) => {
   const { name, description, price, sku, category, initialStock, warehouse, variants } = req.body;
 
+
   if (!name || !price) {
     res.status(400);
     throw new Error('Please add name and price');
@@ -38,6 +39,7 @@ const createProduct = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Product with this SKU already exists');
   }
+
 
   let parsedVariants = [];
   if (variants) {
@@ -66,7 +68,7 @@ const createProduct = asyncHandler(async (req, res) => {
           );
 
           const stream = new Readable();
-          stream._read = () => {};
+          stream._read = () => { };
           stream.push(req.file.buffer);
           stream.push(null);
           stream.pipe(uploadStream);
@@ -94,7 +96,7 @@ const createProduct = asyncHandler(async (req, res) => {
 
   let totalStock = 0;
   if (parsedVariants.length > 0) {
-    totalStock = parsedVariants.reduce((sum, v) => sum - (v.stock ? Number(v.stock) : 0), 0);
+    totalStock = parsedVariants.reduce((sum, v) => sum + (v.stock ? Number(v.stock) : 0), 0);
   } else {
     totalStock = initialStock !== undefined ? Number(initialStock) : 0;
   }

@@ -185,7 +185,7 @@ const Dashboard = () => {
     }
 
     const varSku = variantDraft.sku.trim() || 'VAR-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-    
+
     // Check if variant SKU is unique in draft list
     if (productVariants.some(v => v.sku === varSku)) {
       alert('A variation with this SKU already exists.');
@@ -222,13 +222,16 @@ const Dashboard = () => {
       formData.append('category', newProduct.category);
       formData.append('initialStock', newProduct.initialStock);
       formData.append('warehouse', newProduct.warehouse);
-      formData.append('variants', productVariants.toString());
+      formData.append(
+        'variants',
+        JSON.stringify(productVariants)
+      );
 
       if (productImage) {
         formData.append('image', productImage);
       }
 
-      await axios.post('/product', formData, {
+      await axios.post('/products', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -257,12 +260,12 @@ const Dashboard = () => {
   const handleOrderItemsChange = (index, field, value) => {
     const updatedItems = [...newOrder.items];
     updatedItems[index][field] = value;
-    
+
     // If product is changed, clear selected variantSku
     if (field === 'productId') {
       updatedItems[index]['variantSku'] = '';
     }
-    
+
     setNewOrder({ ...newOrder, items: updatedItems });
   };
 
@@ -280,7 +283,7 @@ const Dashboard = () => {
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
-    
+
     const invalid = newOrder.items.some(item => {
       if (!item.productId || item.quantity <= 0) return true;
       const prod = products.find(p => p._id === item.productId);
@@ -339,8 +342,8 @@ const Dashboard = () => {
         });
       } else {
         // Direct set stock. Need to locate inventory item id if it exists.
-        const existingInv = inventory.find(inv => 
-          inv.product?._id === newInventory.productId && 
+        const existingInv = inventory.find(inv =>
+          inv.product?._id === newInventory.productId &&
           (inv.variantSku || '') === (newInventory.variantSku || '') &&
           inv.warehouse === newInventory.warehouse
         );
@@ -408,7 +411,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-black text-zinc-100 font-sans">
-      
+
       {/* Sidebar Navigation - Black Theme */}
       <aside className="w-64 bg-zinc-950 border-r border-zinc-900 flex flex-col shrink-0">
         {/* Brand / Logo - Monochrome */}
@@ -448,11 +451,10 @@ const Dashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-white text-black font-semibold'
-                    : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100'
-                }`}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-all ${isActive
+                  ? 'bg-white text-black font-semibold'
+                  : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100'
+                  }`}
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}
@@ -476,7 +478,7 @@ const Dashboard = () => {
 
       {/* Main Panel Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-black">
-        
+
         {/* Top Navbar */}
         <header className="h-16 border-b border-zinc-900 bg-zinc-950/60 backdrop-blur-md flex items-center justify-between px-8 shrink-0">
           <div className="flex items-center gap-2">
@@ -508,7 +510,7 @@ const Dashboard = () => {
 
           {!loading && (
             <div className="max-w-7xl mx-auto space-y-6">
-              
+
               {/* SECTION: OVERVIEW */}
               {activeTab === 'overview' && (
                 <div className="space-y-6">
@@ -603,8 +605,8 @@ const Dashboard = () => {
                             </TableHeader>
                             <TableBody>
                               {orders.slice(-5).reverse().map((order) => (
-                               <TableRow 
-                                  key={order._id} 
+                                <TableRow
+                                  key={order._id}
                                   className="border-zinc-900 hover:bg-zinc-900/40 cursor-pointer"
                                   onClick={() => {
                                     setSelectedViewOrder(order);
@@ -617,9 +619,9 @@ const Dashboard = () => {
                                   <TableCell>
                                     <Badge variant={
                                       order.status === 'Delivered' ? 'success' :
-                                      order.status === 'Cancelled' ? 'destructive' :
-                                      order.status === 'Shipped' ? 'info' :
-                                      'warning'
+                                        order.status === 'Cancelled' ? 'destructive' :
+                                          order.status === 'Shipped' ? 'info' :
+                                            'warning'
                                     }>
                                       {order.status}
                                     </Badge>
@@ -644,8 +646,8 @@ const Dashboard = () => {
                         ) : (
                           <div className="space-y-3">
                             {products.slice(-4).reverse().map((product) => (
-                              <div 
-                                key={product._id} 
+                              <div
+                                key={product._id}
                                 className="flex justify-between items-center p-3 rounded bg-zinc-900/50 border border-zinc-800 cursor-pointer hover:border-zinc-700 transition-colors"
                                 onClick={() => {
                                   setSelectedViewProduct(product);
@@ -709,8 +711,8 @@ const Dashboard = () => {
                           </TableHeader>
                           <TableBody>
                             {products.map((product) => (
-                              <TableRow 
-                                key={product._id} 
+                              <TableRow
+                                key={product._id}
                                 className="border-zinc-900 hover:bg-zinc-900/40 cursor-pointer"
                                 onClick={() => {
                                   setSelectedViewProduct(product);
@@ -722,10 +724,10 @@ const Dashboard = () => {
                                   <div className="flex flex-col gap-1.5">
                                     <div className="flex items-center gap-3">
                                       {product.image ? (
-                                        <img 
-                                          src={product.image} 
-                                          alt={product.name} 
-                                          className="h-9 w-9 object-cover rounded border border-zinc-800 bg-zinc-900 shrink-0" 
+                                        <img
+                                          src={product.image}
+                                          alt={product.name}
+                                          className="h-9 w-9 object-cover rounded border border-zinc-800 bg-zinc-900 shrink-0"
                                         />
                                       ) : (
                                         <div className="h-9 w-9 rounded border border-zinc-800 bg-zinc-900 flex items-center justify-center text-[9px] text-zinc-500 font-medium shrink-0">
@@ -784,14 +786,14 @@ const Dashboard = () => {
                       <h2 className="text-lg font-bold text-white">Orders Log</h2>
                       <p className="text-sm text-zinc-550">Record customer billing details and monitor order progress.</p>
                     </div>
-                    <Button 
+                    <Button
                       onClick={() => {
                         if (products.length === 0) {
                           alert('Please create at least one product before placing an order.');
                           return;
                         }
                         setShowOrderModal(true);
-                      }} 
+                      }}
                       className="bg-white text-black hover:bg-zinc-200 flex items-center gap-2 font-medium shadow"
                     >
                       <Plus className="h-4 w-4" />
@@ -806,14 +808,14 @@ const Dashboard = () => {
                           <ShoppingCart className="h-12 w-12 text-zinc-700 mx-auto mb-3" />
                           <h3 className="font-semibold text-zinc-300">No Orders Placed</h3>
                           <p className="text-xs text-zinc-500 max-w-sm mx-auto mt-1">Draft a custom order by clicking the create order button above.</p>
-                          <Button 
+                          <Button
                             onClick={() => {
                               if (products.length === 0) {
                                 alert('Please create at least one product before placing an order.');
                                 return;
                               }
                               setShowOrderModal(true);
-                            }} 
+                            }}
                             className="mt-4 bg-white text-black hover:bg-zinc-200"
                           >
                             Add Order
@@ -834,8 +836,8 @@ const Dashboard = () => {
                           <TableBody>
                             {orders.map((order) => {
                               return (
-                                <TableRow 
-                                  key={order._id} 
+                                <TableRow
+                                  key={order._id}
                                   className="border-zinc-900 hover:bg-zinc-900/40 cursor-pointer"
                                   onClick={() => {
                                     setSelectedViewOrder(order);
@@ -863,9 +865,9 @@ const Dashboard = () => {
                                   <TableCell>
                                     <Badge variant={
                                       order.status === 'Delivered' ? 'success' :
-                                      order.status === 'Cancelled' ? 'destructive' :
-                                      order.status === 'Shipped' ? 'info' :
-                                      'warning'
+                                        order.status === 'Cancelled' ? 'destructive' :
+                                          order.status === 'Shipped' ? 'info' :
+                                            'warning'
                                     }>
                                       {order.status}
                                     </Badge>
@@ -889,14 +891,14 @@ const Dashboard = () => {
                       <h2 className="text-lg font-bold text-white">Stock Allocation</h2>
                       <p className="text-sm text-zinc-550">Configure warehoused products and handle stock levels manually.</p>
                     </div>
-                    <Button 
+                    <Button
                       onClick={() => {
                         if (products.length === 0) {
                           alert('Create a product in catalog first.');
                           return;
                         }
                         setShowInventoryModal(true);
-                      }} 
+                      }}
                       className="bg-white text-black hover:bg-zinc-200 flex items-center gap-2 font-medium shadow"
                     >
                       <Plus className="h-4 w-4" />
@@ -974,8 +976,8 @@ const Dashboard = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
                             <Label htmlFor="currency" className="text-zinc-300">Currency Symbol</Label>
-                            <Select 
-                              value={storeSettings.currency} 
+                            <Select
+                              value={storeSettings.currency}
                               onValueChange={(val) => setStoreSettings({ ...storeSettings, currency: val })}
                             >
                               <SelectTrigger className="bg-black border-zinc-800 text-white">
@@ -1097,7 +1099,7 @@ const Dashboard = () => {
                               </SelectContent>
                             </Select>
                           </div>
-                          
+
                           <div className="space-y-2">
                             <Label className="text-zinc-300 text-xs">Post / Position</Label>
                             <Select value={profileData.post} onValueChange={(val) => setProfileData({ ...profileData, post: val })}>
@@ -1131,11 +1133,11 @@ const Dashboard = () => {
 
                           <div className="space-y-2">
                             <Label className="text-zinc-300 text-xs">Personal Address</Label>
-                            <Input 
-                              type="text" 
-                              name="address" 
-                              value={profileData.address} 
-                              onChange={(e) => setProfileData({ ...profileData, address: e.target.value })} 
+                            <Input
+                              type="text"
+                              name="address"
+                              value={profileData.address}
+                              onChange={(e) => setProfileData({ ...profileData, address: e.target.value })}
                               placeholder="e.g. 123 Main St, City"
                               className="bg-black border-zinc-800 text-white"
                             />
@@ -1293,8 +1295,8 @@ const Dashboard = () => {
                   {productVariants.map((v) => (
                     <div key={v.sku} className="flex justify-between items-center bg-black/50 border border-zinc-850/80 px-3 py-1.5 rounded text-xs font-mono">
                       <span>
-                        Size: <strong className="text-white">{v.size || 'N/A'}</strong> | 
-                        Color: <strong className="text-white">{v.color || 'N/A'}</strong> | 
+                        Size: <strong className="text-white">{v.size || 'N/A'}</strong> |
+                        Color: <strong className="text-white">{v.color || 'N/A'}</strong> |
                         SKU: <strong className="text-zinc-300">{v.sku}</strong>
                       </span>
                       <div className="flex items-center gap-4">
@@ -1312,8 +1314,8 @@ const Dashboard = () => {
               <div className="grid grid-cols-5 gap-2.5 items-end">
                 <div className="space-y-1">
                   <Label className="text-[10px] text-zinc-400">Size</Label>
-                  <Input 
-                    value={variantDraft.size} 
+                  <Input
+                    value={variantDraft.size}
                     onChange={e => setVariantDraft({ ...variantDraft, size: e.target.value })}
                     placeholder="e.g. L"
                     className="h-8 text-xs bg-black border-zinc-800 text-white"
@@ -1321,8 +1323,8 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] text-zinc-400">Color</Label>
-                  <Input 
-                    value={variantDraft.color} 
+                  <Input
+                    value={variantDraft.color}
                     onChange={e => setVariantDraft({ ...variantDraft, color: e.target.value })}
                     placeholder="e.g. Red"
                     className="h-8 text-xs bg-black border-zinc-800 text-white"
@@ -1330,10 +1332,10 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] text-zinc-400">Price *</Label>
-                  <Input 
+                  <Input
                     type="number"
                     step="0.01"
-                    value={variantDraft.price} 
+                    value={variantDraft.price}
                     onChange={e => setVariantDraft({ ...variantDraft, price: e.target.value })}
                     placeholder="24.99"
                     className="h-8 text-xs bg-black border-zinc-800 text-white"
@@ -1341,9 +1343,9 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] text-zinc-400">Stock *</Label>
-                  <Input 
+                  <Input
                     type="number"
-                    value={variantDraft.stock} 
+                    value={variantDraft.stock}
                     onChange={e => setVariantDraft({ ...variantDraft, stock: e.target.value })}
                     placeholder="15"
                     className="h-8 text-xs bg-black border-zinc-800 text-white"
@@ -1351,17 +1353,17 @@ const Dashboard = () => {
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] text-zinc-400">SKU</Label>
-                  <Input 
-                    value={variantDraft.sku} 
+                  <Input
+                    value={variantDraft.sku}
                     onChange={e => setVariantDraft({ ...variantDraft, sku: e.target.value })}
                     placeholder="T-L-RED"
                     className="h-8 text-xs bg-black border-zinc-800 text-white"
                   />
                 </div>
                 <div className="col-span-5 flex justify-end">
-                  <Button 
-                    type="button" 
-                    onClick={handleAddVariantDraft} 
+                  <Button
+                    type="button"
+                    onClick={handleAddVariantDraft}
                     variant="outline"
                     className="h-8 text-xs border-zinc-800 text-zinc-300 hover:bg-zinc-900"
                   >
@@ -1414,8 +1416,8 @@ const Dashboard = () => {
               </div>
               <div className="space-y-1">
                 <Label htmlFor="ord-status" className="text-zinc-400 text-xs">Status</Label>
-                <Select 
-                  value={newOrder.status} 
+                <Select
+                  value={newOrder.status}
                   onValueChange={(val) => setNewOrder({ ...newOrder, status: val })}
                 >
                   <SelectTrigger className="bg-black border-zinc-800 text-white">
@@ -1438,10 +1440,10 @@ const Dashboard = () => {
                   <ShoppingCart className="h-4 w-4 text-zinc-400" />
                   Ordered Items
                 </h4>
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={addOrderItemField} 
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addOrderItemField}
                   className="border-zinc-800 text-xs h-8 text-zinc-350 hover:bg-zinc-900 flex items-center gap-1"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add Item Line
@@ -1458,8 +1460,8 @@ const Dashboard = () => {
                       <div className="flex gap-4 items-end">
                         <div className="flex-1 space-y-1">
                           <Label className="text-zinc-400 text-[10px]">Select Product</Label>
-                          <Select 
-                            value={item.productId} 
+                          <Select
+                            value={item.productId}
                             onValueChange={(val) => handleOrderItemsChange(idx, 'productId', val)}
                           >
                             <SelectTrigger className="bg-black border-zinc-800 text-white h-9">
@@ -1501,8 +1503,8 @@ const Dashboard = () => {
                       {hasVariants && (
                         <div className="space-y-1">
                           <Label className="text-zinc-400 text-[10px]">Select Variation *</Label>
-                          <Select 
-                            value={item.variantSku} 
+                          <Select
+                            value={item.variantSku}
                             onValueChange={(val) => handleOrderItemsChange(idx, 'variantSku', val)}
                           >
                             <SelectTrigger className="bg-black border-zinc-800 text-white h-9">
@@ -1511,8 +1513,8 @@ const Dashboard = () => {
                             <SelectContent className="bg-zinc-950 border-zinc-900 text-slate-200">
                               {selectedProduct.variants.map(v => (
                                 <SelectItem key={v.sku} value={v.sku}>
-                                  {v.size ? `Size: ${v.size} ` : ''} 
-                                  {v.color ? `Color: ${v.color} ` : ''} 
+                                  {v.size ? `Size: ${v.size} ` : ''}
+                                  {v.color ? `Color: ${v.color} ` : ''}
                                   ({storeSettings.currency}{v.price.toFixed(2)} - Stock: {v.stock})
                                 </SelectItem>
                               ))}
@@ -1546,8 +1548,8 @@ const Dashboard = () => {
           <form onSubmit={handleInventorySubmit} className="p-6 space-y-4">
             <div className="space-y-1">
               <Label className="text-zinc-355 text-xs">Select Product *</Label>
-              <Select 
-                value={newInventory.productId} 
+              <Select
+                value={newInventory.productId}
                 onValueChange={(val) => setNewInventory({ ...newInventory, productId: val, variantSku: '' })}
               >
                 <SelectTrigger className="bg-black border-zinc-800 text-white">
@@ -1567,8 +1569,8 @@ const Dashboard = () => {
             {newInventory.productId && products.find(p => p._id === newInventory.productId)?.variants?.length > 0 && (
               <div className="space-y-1">
                 <Label className="text-zinc-355 text-xs">Select Variant *</Label>
-                <Select 
-                  value={newInventory.variantSku} 
+                <Select
+                  value={newInventory.variantSku}
                   onValueChange={(val) => setNewInventory({ ...newInventory, variantSku: val })}
                 >
                   <SelectTrigger className="bg-black border-zinc-800 text-white">
@@ -1600,8 +1602,8 @@ const Dashboard = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <Label className="text-zinc-455 text-xs">Adjustment Method</Label>
-                <Select 
-                  value={newInventory.mode} 
+                <Select
+                  value={newInventory.mode}
                   onValueChange={(val) => setNewInventory({ ...newInventory, mode: val })}
                 >
                   <SelectTrigger className="bg-black border-zinc-800 text-white">
@@ -1647,10 +1649,10 @@ const Dashboard = () => {
             <div className="space-y-6 mt-4">
               <div className="flex gap-6 items-start">
                 {selectedViewProduct.image ? (
-                  <img 
-                    src={selectedViewProduct.image} 
-                    alt={selectedViewProduct.name} 
-                    className="h-24 w-24 object-cover rounded border border-zinc-800 bg-zinc-900 shrink-0" 
+                  <img
+                    src={selectedViewProduct.image}
+                    alt={selectedViewProduct.name}
+                    className="h-24 w-24 object-cover rounded border border-zinc-800 bg-zinc-900 shrink-0"
                   />
                 ) : (
                   <div className="h-24 w-24 rounded border border-zinc-800 bg-zinc-900 flex items-center justify-center text-xs text-zinc-500 font-medium shrink-0">
@@ -1755,9 +1757,9 @@ const Dashboard = () => {
                   <span className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider block">Status</span>
                   <Badge variant={
                     selectedViewOrder.status === 'Delivered' ? 'success' :
-                    selectedViewOrder.status === 'Cancelled' ? 'destructive' :
-                    selectedViewOrder.status === 'Shipped' ? 'info' :
-                    'warning'
+                      selectedViewOrder.status === 'Cancelled' ? 'destructive' :
+                        selectedViewOrder.status === 'Shipped' ? 'info' :
+                          'warning'
                   }>
                     {selectedViewOrder.status}
                   </Badge>
@@ -1828,13 +1830,12 @@ const Dashboard = () => {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-center justify-between p-4 rounded-md border shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-5 ${
-              toast.type === 'destructive'
-                ? 'bg-zinc-950 border-red-900/50 text-red-200'
-                : toast.type === 'warning'
+            className={`pointer-events-auto flex items-center justify-between p-4 rounded-md border shadow-lg transition-all duration-300 animate-in slide-in-from-bottom-5 ${toast.type === 'destructive'
+              ? 'bg-zinc-950 border-red-900/50 text-red-200'
+              : toast.type === 'warning'
                 ? 'bg-zinc-950 border-yellow-900/50 text-yellow-200'
                 : 'bg-zinc-950 border-zinc-800 text-zinc-150'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2.5">
               {toast.type === 'destructive' ? (

@@ -13,7 +13,6 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await axios.get('/users/profile');
-          console.log("/users/profile-->", response.data)
           setUser(response.data);
         } catch (error) {
           console.error('Error fetching user profile', error);
