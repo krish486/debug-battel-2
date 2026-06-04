@@ -115,7 +115,7 @@ const refresh = asyncHandler(async (req, res) => {
 
   try {
     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    
+
     // Find user to ensure they still exist
     const user = await User.findById(decoded.id);
     if (!user) {
@@ -143,7 +143,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     httpOnly: true,
     expires: new Date(0),
   });
-  
+
   res.status(200).json({ message: 'Logged out successfully' });
 });
 
